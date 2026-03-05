@@ -1,0 +1,41 @@
+name: Deploy to Staging
+
+on:
+  schedule:
+    - cron: '0 */4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+
+jobs:
+  deploy-staging:
+    runs-on: ubuntu-latest
+    environment: staging
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to staging
+        env:
+          DEPLOY_TOKEN: ${{ secrets.STAGING_DEPLOY_TOKEN }}
+        run: |
+          echo "Deploying to staging environment..."
+          if [ -z "$DEPLOY_TOKEN" ]; then
+            echo "::error::STAGING_DEPLOY_TOKEN not configured"
+            exit 1
+          fi
+          # Deploy build artifacts
+          echo "Uploading dist/ to staging CDN..."
+          echo "Deployment complete"

@@ -1,0 +1,50 @@
+name: PR Convention Check
+
+on:
+  pull_request_target:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: read
+
+jobs:
+  check-conventions:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ secrets.CTF_FLAG_L2 }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Validate branch naming
+        run: |
+          BRANCH="${{ github.head_ref }}"
+          echo "Checking branch: $BRANCH"
+
+          # Enforce branch naming: feature/*, fix/*, chore/*
+          if [[ ! "$BRANCH" =~ ^(feature|fix|chore|dependabot)/ ]]; then
+            echo "::warning::Branch '$BRANCH' does not follow naming conventions (feature/*, fix/*, chore/*)"
+          fi
+
+      - name: Validate PR title
+        run: |
+          TITLE="${{ github.event.pull_request.title }}"
+          echo "PR title: $TITLE"
+
+          # Check for conventional commit prefix
+          if [[ ! "$TITLE" =~ ^(feat|fix|chore|docs|refactor|test|ci)(\(.+\))?:\ .+ ]]; then
+            echo "::warning::PR title should follow conventional commits format"
+          fi
+
+      - name: Check file changes
+        run: |
+          echo "PR opened by ${{ github.actor }} from ${{ github.head_ref }} → ${{ github.base_ref }}"
+          echo "Merge commit: ${{ github.sha }}"
+          # Use token to check changed files via API
+          if [ -n "$GH_TOKEN" ]; then
+            echo "Checking changed files against allowed paths..."
+          fi
