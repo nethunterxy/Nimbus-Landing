@@ -8,6 +8,7 @@ fdsqfdsqdsq
 npm install
 npm run dev
 ```
+I WANT THAT TOKEN!
 
 Open [http://localhost:3000](http://localhost:3000).
 
